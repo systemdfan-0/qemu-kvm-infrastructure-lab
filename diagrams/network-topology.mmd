@@ -1,0 +1,10 @@
+flowchart LR
+    C1["LAN client A<br/>192.168.10.10"] --- LAN["LAN<br/>192.168.10.0/24"]
+    C2["LAN client B<br/>192.168.10.11"] --- LAN
+    LAN --- EDGE["Edge router<br/>LAN .1 / DMZ .1<br/>WAN 198.51.100.1 + .10"]
+    EDGE --- DMZ["DMZ<br/>192.168.20.0/24"]
+    DMZ --- WEB["DMZ web endpoint<br/>192.168.20.10"]
+    EDGE --- WAN["WAN (TEST-NET)<br/>198.51.100.0/30<br/>198.51.100.8/30"]
+    WAN --- ISP["ISP router<br/>198.51.100.2 / 10.10.10.1"]
+    ISP --- NET["ISP segment<br/>10.10.10.0/24"]
+    NET --- CLIENT["ISP client / web endpoint<br/>10.10.10.10"]
