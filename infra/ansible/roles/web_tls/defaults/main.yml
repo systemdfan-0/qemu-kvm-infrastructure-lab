@@ -1,0 +1,5 @@
+---
+web_tls_port: 443
+web_tls_cert: /etc/stunnel/lab-web.crt
+web_tls_key: /etc/stunnel/lab-web.key
+web_tls_days: 365

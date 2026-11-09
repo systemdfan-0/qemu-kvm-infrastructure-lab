@@ -15,10 +15,10 @@ The firewall's late boot ordering was corrected to run before interface activati
 | Area | Actual boundary |
 |---|---|
 | Router management | INPUT/OUTPUT ACCEPT; connected segments can reach router SSH |
-| SSH | Password authentication for ordinary accounts remains enabled; root login is key-only; login/authentication was not tested |
+| SSH | In the original guests password authentication for ordinary accounts remains enabled; root login is key-only; login/authentication was not tested. A [key-only policy with verification tooling](ssh-hardening.md) now exists but has not been applied to them |
 | Forwarding isolation | Selected IPv4 paths tested; alternative host paths, all protocols and IPv6 not certified |
 | DMZ access | ISP reaches both translated and private DMZ HTTP addresses |
-| HTTP / DNS | No TLS; guest DNS absent; IP-only operation |
+| HTTP / DNS | No TLS in the documented lab (an untested optional TLS role exists, see [infrastructure as code](infrastructure-as-code.md)); guest DNS absent; IP-only operation |
 | Recovery | Verified configuration copies; no independent off-host full-system backup or restore drill |
 | Startup | One guest reboot cycle; no host reboot or deliberate firewall-load failure test |
 | Inventory hygiene | Shared guest hostname configuration and an unused network remain; actual names omitted |
@@ -29,7 +29,7 @@ The repository describes a learning environment. It does not authorize exposing 
 
 ## Sanitization
 
-Publication includes only curated Markdown, one Mermaid diagram, `.gitignore` and the local checker. Actual VM/domain names are replaced with role aliases. UUIDs, MACs, boot IDs, personal hostnames, home-network details, personal filesystem paths, internal XML, raw diagnostics, private privileged files, backups, disk images, credentials and screenshots are excluded. No operational audit/change/reboot scripts are distributed.
+Publication includes only curated Markdown, one Mermaid diagram, `.gitignore` and the local checker. Actual VM/domain names are replaced with role aliases. UUIDs, MACs, boot IDs, personal hostnames, home-network details, personal filesystem paths, internal XML, raw diagnostics, private privileged files, backups, disk images, credentials and screenshots are excluded. The original operational audit/change/reboot scripts are not distributed. The `infra/` directory is separate, newly written reference code with no content copied from them; the checker covers it too.
 
 WAN mapping uses TEST-NET `198.51.100.0/24`: router `.1`, ISP router `.2`, published DMZ `.10`; transit ranges `.0/30` and `.8/30`. RFC1918 LAN/DMZ/ISP addresses are lab-local, not home-network addresses. Mapping affects documentation only.
 

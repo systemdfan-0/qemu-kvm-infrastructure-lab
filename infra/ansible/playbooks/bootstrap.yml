@@ -1,0 +1,8 @@
+---
+# Phase 1: install packages while the temporary management route exists, then remove it.
+- name: Bootstrap packages
+  hosts: all
+  become: true
+  gather_facts: false
+  roles:
+    - packages

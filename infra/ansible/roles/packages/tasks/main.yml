@@ -1,0 +1,40 @@
+---
+# Installs every package the lab needs while the guest can still reach the package
+# mirrors through the management NAT network. The route is runtime-only and is removed
+# again, so the lab keeps its documented "no Internet" property (ISP router has no
+# default route). Re-running on a locked-down lab works offline: packages are already
+# present, so apt does not need the network.
+- name: Look for an existing default route
+  ansible.builtin.command: ip -4 route show default
+  register: packages_existing_default
+  changed_when: false
+
+- name: Decide whether the temporary route is needed
+  ansible.builtin.set_fact:
+    packages_temp_route: "{{ packages_existing_default.stdout | trim == '' }}"
+
+- name: Install packages
+  vars:
+    packages_tls: "{{ ['stunnel4', 'openssl'] if (web_tls_enabled | bool and 'web' in group_names) else [] }}"
+    packages_wanted: "{{ lab_packages_common + (lab_packages_extra | default([])) + packages_tls }}"
+  block:
+    - name: Add temporary runtime default route via the management network
+      ansible.builtin.command: >-
+        ip route add default via {{ lab_mgmt_gateway }} dev {{ lab_mgmt_if }}
+      changed_when: true
+      when: packages_temp_route
+
+    - name: Install lab packages
+      ansible.builtin.apt:
+        name: "{{ packages_wanted }}"
+        state: present
+        update_cache: "{{ packages_temp_route }}"
+        cache_valid_time: 3600
+  always:
+    - name: Remove the temporary default route
+      ansible.builtin.command: >-
+        ip route del default via {{ lab_mgmt_gateway }} dev {{ lab_mgmt_if }}
+      register: packages_route_del
+      changed_when: packages_route_del.rc == 0
+      failed_when: packages_route_del.rc not in [0, 2]
+      when: packages_temp_route

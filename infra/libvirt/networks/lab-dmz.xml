@@ -1,0 +1,5 @@
+<!-- DMZ segment: L2 only -->
+<network>
+  <name>lab-dmz</name>
+  <bridge name='labbr-dmz' stp='on' delay='0'/>
+</network>

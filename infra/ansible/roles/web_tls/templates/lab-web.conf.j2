@@ -1,0 +1,10 @@
+; {{ ansible_managed }}
+setuid = stunnel4
+setgid = stunnel4
+
+[lab-https]
+accept = {{ web_tls_port }}
+connect = 127.0.0.1:{{ web_port }}
+cert = {{ web_tls_cert }}
+key = {{ web_tls_key }}
+sslVersionMin = TLSv1.2

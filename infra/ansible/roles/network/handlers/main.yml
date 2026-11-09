@@ -1,0 +1,10 @@
+---
+# Only lab interfaces are cycled; the management interface (cloud-init) is never touched.
+- name: Apply lab interfaces
+  ansible.builtin.shell: |
+    set -e
+    for i in {{ lab_interfaces | map(attribute='name') | join(' ') }}; do
+      ifdown --force "$i" || true
+      ifup "$i"
+    done
+  changed_when: true

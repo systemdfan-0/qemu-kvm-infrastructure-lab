@@ -1,0 +1,5 @@
+<!-- ISP segment: L2 only -->
+<network>
+  <name>lab-isp</name>
+  <bridge name='labbr-isp' stp='on' delay='0'/>
+</network>

@@ -1,0 +1,50 @@
+---
+# Optional HTTPS for the static endpoint. A self-signed certificate is used on purpose:
+# the lab has no DNS and no public name, so no public CA can issue one. For anything
+# beyond a lab, use an internal CA or ACME with a real name (see docs/en/infrastructure-as-code.md).
+- name: Generate a self-signed ECDSA certificate (idempotent)
+  ansible.builtin.command:
+    argv:
+      - openssl
+      - req
+      - -x509
+      - -newkey
+      - ec
+      - -pkeyopt
+      - ec_paramgen_curve:prime256v1
+      - -nodes
+      - -days
+      - "{{ web_tls_days }}"
+      - -subj
+      - "/CN={{ inventory_hostname }}"
+      - -addext
+      - "subjectAltName=IP:{{ ansible_host_lab_ip }}"
+      - -keyout
+      - "{{ web_tls_key }}"
+      - -out
+      - "{{ web_tls_cert }}"
+    creates: "{{ web_tls_key }}"
+  vars:
+    ansible_host_lab_ip: "{{ (lab_interfaces | first).address }}"
+
+- name: Restrict private key permissions
+  ansible.builtin.file:
+    path: "{{ web_tls_key }}"
+    owner: root
+    group: root
+    mode: "0600"
+
+- name: Configure the stunnel TLS terminator
+  ansible.builtin.template:
+    src: lab-web.conf.j2
+    dest: /etc/stunnel/lab-web.conf
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart stunnel
+
+- name: Enable and start stunnel@lab-web
+  ansible.builtin.systemd_service:
+    name: stunnel@lab-web.service
+    enabled: true
+    state: started

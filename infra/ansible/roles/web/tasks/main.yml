@@ -1,0 +1,35 @@
+---
+- name: Create the document root (root-owned, read-only for the service)
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  loop:
+    - /srv/www
+    - "{{ web_root }}"
+
+- name: Publish a static index page
+  ansible.builtin.template:
+    src: index.html.j2
+    dest: "{{ web_root }}/index.html"
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Install lab-web.service
+  ansible.builtin.template:
+    src: lab-web.service.j2
+    dest: /etc/systemd/system/lab-web.service
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart lab-web
+
+- name: Enable and start lab-web.service
+  ansible.builtin.systemd_service:
+    name: lab-web.service
+    enabled: true
+    state: started
+    daemon_reload: true

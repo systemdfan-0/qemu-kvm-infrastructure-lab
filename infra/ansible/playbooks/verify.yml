@@ -1,0 +1,49 @@
+---
+# Read-only traffic matrix. Each guest opens TCP connections from itself, mirroring the
+# documented methodology: allowed flows must connect (SSH flows must show an SSH banner),
+# denied flows must NOT connect. Nothing is changed on any guest.
+- name: Verify the traffic matrix
+  hosts: all
+  gather_facts: false
+  vars_files:
+    - ../vars/matrix.yml
+  vars:
+    verify_probe: |
+      import socket, sys
+      host, port, want_banner = sys.argv[1], int(sys.argv[2]), sys.argv[3] == "1"
+      try:
+          s = socket.create_connection((host, port), timeout=3)
+          if want_banner:
+              s.settimeout(3)
+              if not s.recv(64).startswith(b"SSH-"):
+                  sys.exit(3)
+      except OSError:
+          sys.exit(1)
+  tasks:
+    - name: Probe the flows that originate on this guest
+      ansible.builtin.command:
+        argv:
+          - /usr/bin/python3
+          - -I
+          - -c
+          - "{{ verify_probe }}"
+          - "{{ item.to }}"
+          - "{{ item.port }}"
+          - "{{ '1' if (item.port == 22 and effective == 'open') else '0' }}"
+      vars:
+        effective: >-
+          {{ item.expect_strict
+             if (edge_input_mode | default('open') == 'strict' and item.expect_strict is defined)
+             else item.expect }}
+      loop: "{{ matrix | selectattr('from', 'equalto', inventory_hostname) | list }}"
+      loop_control:
+        label: "#{{ item.id }} {{ item.from }} -> {{ item.to }}:{{ item.port }} expect {{ item.expect }}"
+      register: verify_results
+      changed_when: false
+      failed_when: (verify_results.rc == 0) != (effective == 'open')
+
+    - name: Management network must not provide a default route
+      ansible.builtin.command: ip -4 route show default
+      register: verify_default
+      changed_when: false
+      failed_when: lab_mgmt_if in verify_default.stdout

@@ -1,0 +1,5 @@
+---
+- name: Restart stunnel
+  ansible.builtin.systemd_service:
+    name: stunnel@lab-web.service
+    state: restarted

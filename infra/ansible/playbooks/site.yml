@@ -1,0 +1,28 @@
+---
+# Full configuration of an already created lab (see infra/libvirt/lab.sh).
+- name: Bootstrap packages
+  ansible.builtin.import_playbook: bootstrap.yml
+
+- name: Edge firewall (must be in place before lab interfaces are brought up)
+  hosts: edge
+  become: true
+  roles:
+    - edge_firewall
+
+- name: Base system and static addressing
+  hosts: all
+  become: true
+  roles:
+    - base
+    - network
+
+- name: Static web endpoints
+  hosts: web
+  become: true
+  roles:
+    - web
+    - role: web_tls
+      when: web_tls_enabled | bool
+
+- name: SSH hardening
+  ansible.builtin.import_playbook: ssh_hardening.yml

@@ -16,6 +16,10 @@ This is AI-assisted learning work. It demonstrates Linux networking, QEMU/KVM an
 
 QEMU/KVM Infrastructure Lab is a personal Linux networking project built around six Debian VMs and LAN/DMZ/WAN/ISP segments. It documents static routing, NAT and firewall behavior, safer systemd HTTP services, verified persistence after guest reboots and 33 successful network checks, with explicit security and recovery limitations.
 
+## Follow-up work
+
+Written but **not yet run on the lab**: a reproducible build ([infrastructure as code](infrastructure-as-code.md)), an SSH policy with a verification probe ([SSH hardening](ssh-hardening.md)), a strict management-plane mode and an optional TLS role.
+
 ## Next learning tasks (not implemented)
 
-Define management-plane ACLs and an SSH authentication policy; add DNS/TLS if needed; design independent full-system backups and test restoration; expand IPv6 and alternative-path tests. These are future work, not delivered capabilities. The existing portfolio website was not modified.
+Run the reproducible build end to end and fix what it reveals; apply and verify the SSH policy on real guests; add DNS if needed; design independent full-system backups and test restoration; expand IPv6 and alternative-path tests. These are future work, not delivered capabilities. The existing portfolio website was not modified.

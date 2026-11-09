@@ -1,0 +1,19 @@
+# {{ ansible_managed }}
+# Named 00-* on purpose: sshd uses the FIRST value it reads, and drop-ins from
+# other tools (for example cloud-init's 50-cloud-init.conf) must not override this file.
+PermitRootLogin no
+PasswordAuthentication no
+KbdInteractiveAuthentication no
+PubkeyAuthentication yes
+PermitEmptyPasswords no
+AuthenticationMethods publickey
+AllowUsers {{ ssh_allow_users | join(' ') }}
+MaxAuthTries {{ ssh_max_auth_tries }}
+LoginGraceTime {{ ssh_login_grace_time }}
+MaxStartups 10:30:60
+X11Forwarding no
+AllowAgentForwarding no
+AllowTcpForwarding {{ ssh_allow_tcp_forwarding }}
+PermitTunnel no
+ClientAliveInterval 300
+ClientAliveCountMax 2

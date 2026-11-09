@@ -1,0 +1,35 @@
+---
+# TCP subset of the 33-check matrix in docs/en/validation.md. ICMP checks (6, 12, 28) are
+# not included. `id` is the check number from the documentation.
+# expect_strict applies when edge_input_mode == "strict".
+matrix:
+  - {id: 1,  from: lab-edge,        to: 192.168.10.10,   port: 22, expect: open}
+  - {id: 2,  from: lab-edge,        to: 192.168.10.11,   port: 22, expect: open}
+  - {id: 3,  from: lab-edge,        to: 192.168.20.10,   port: 22, expect: open}
+  - {id: 4,  from: lab-edge,        to: 198.51.100.2,    port: 22, expect: open}
+  - {id: 5,  from: lab-isp-router,  to: 10.10.10.10,     port: 22, expect: open}
+  - {id: 7,  from: lab-isp-router,  to: 10.10.10.10,     port: 80, expect: open}
+  - {id: 8,  from: lab-dmz-web,     to: 192.168.10.10,   port: 22, expect: blocked}
+  - {id: 9,  from: lab-dmz-web,     to: 192.168.10.11,   port: 22, expect: blocked}
+  - {id: 10, from: lab-dmz-web,     to: 10.10.10.10,     port: 80, expect: blocked}
+  - {id: 11, from: lab-dmz-web,     to: 192.168.20.1,    port: 22, expect: open, expect_strict: blocked}
+  - {id: 13, from: lab-dmz-web,     to: 127.0.0.1,       port: 80, expect: open}
+  - {id: 14, from: lab-isp-client,  to: 198.51.100.10,   port: 80, expect: open}
+  - {id: 15, from: lab-isp-client,  to: 192.168.20.10,   port: 80, expect: open}
+  - {id: 16, from: lab-isp-client,  to: 192.168.10.10,   port: 22, expect: blocked}
+  - {id: 17, from: lab-isp-client,  to: 192.168.10.11,   port: 22, expect: blocked}
+  - {id: 18, from: lab-isp-client,  to: 198.51.100.10,   port: 22, expect: blocked}
+  - {id: 19, from: lab-isp-client,  to: 192.168.20.10,   port: 22, expect: blocked}
+  - {id: 20, from: lab-isp-client,  to: 10.10.10.1,      port: 22, expect: open}
+  - {id: 21, from: lab-lan-a,       to: 192.168.20.10,   port: 80, expect: open}
+  - {id: 22, from: lab-lan-a,       to: 10.10.10.10,     port: 80, expect: open}
+  - {id: 23, from: lab-lan-a,       to: 198.51.100.10,   port: 80, expect: blocked}
+  - {id: 24, from: lab-lan-a,       to: 192.168.10.11,   port: 22, expect: open}
+  - {id: 25, from: lab-lan-a,       to: 192.168.10.1,    port: 22, expect: open}
+  - {id: 26, from: lab-lan-a,       to: 192.168.20.10,   port: 22, expect: blocked}
+  - {id: 27, from: lab-lan-a,       to: 10.10.10.10,     port: 22, expect: blocked}
+  - {id: 29, from: lab-lan-b,       to: 192.168.20.10,   port: 80, expect: open}
+  - {id: 30, from: lab-lan-b,       to: 10.10.10.10,     port: 80, expect: open}
+  - {id: 31, from: lab-lan-b,       to: 192.168.10.10,   port: 22, expect: open}
+  - {id: 32, from: lab-lan-b,       to: 192.168.20.10,   port: 22, expect: blocked}
+  - {id: 33, from: lab-lan-b,       to: 10.10.10.10,     port: 22, expect: blocked}

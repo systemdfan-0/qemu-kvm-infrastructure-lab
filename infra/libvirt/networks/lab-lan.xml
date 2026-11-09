@@ -1,0 +1,5 @@
+<!-- LAN segment: L2 only, no host address, no DHCP, no forwarding -->
+<network>
+  <name>lab-lan</name>
+  <bridge name='labbr-lan' stp='on' delay='0'/>
+</network>

@@ -1,0 +1,2 @@
+---
+lab_packages_extra: "{{ lab_packages_routers }}"

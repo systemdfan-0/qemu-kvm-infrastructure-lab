@@ -1,0 +1,31 @@
+name: checks
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Publication checker (no secrets, no private identifiers)
+        run: python3 scripts/check_public.py
+      - name: Shell syntax and static analysis
+        run: |
+          bash -n infra/libvirt/lab.sh
+          shellcheck infra/libvirt/lab.sh
+      - name: libvirt network XML
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libxml2-utils libvirt-clients
+          for f in infra/libvirt/networks/*.xml; do xmllint --noout "$f"; virt-xml-validate "$f" network; done
+      - name: Ansible and YAML lint
+        run: |
+          python3 -m pip install ansible-core ansible-lint yamllint
+          cd infra/ansible
+          yamllint .
+          ansible-lint -q playbooks roles
+          for p in site bootstrap ssh_hardening verify audit_ssh; do ansible-playbook "playbooks/$p.yml" --syntax-check; done
+      - name: Python syntax
+        run: python3 -m py_compile scripts/check_public.py scripts/ssh_check.py

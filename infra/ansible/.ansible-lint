@@ -1,0 +1,5 @@
+---
+# Policy variables (ssh_*, f2b_*, lab_*) are intentionally shared between roles and the
+# inventory, so the "role prefix" naming rule is switched off. Everything else is enforced.
+skip_list:
+  - var-naming[no-role-prefix]
