@@ -1,0 +1,10 @@
+---
+ssh_allow_users: ["{{ admin_user }}"]
+ssh_allow_tcp_forwarding: "no"
+ssh_max_auth_tries: 3
+ssh_login_grace_time: 30
+f2b_maxretry: 5
+f2b_findtime: 10m
+f2b_bantime: 1h
+# Addresses that fail2ban must never ban (the Ansible controller reaches the lab here).
+f2b_ignoreip: "127.0.0.1/8 {{ lab_mgmt_cidr | default('192.168.150.0/24') }}"

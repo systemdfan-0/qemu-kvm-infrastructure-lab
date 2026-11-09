@@ -1,0 +1,19 @@
+<!-- Management network used by Ansible. Deviation from the original lab, which had no
+     management NIC. NAT is used only so that "bootstrap" can install packages; the
+     bootstrap play removes the guests' default route through this network afterwards.
+     MAC addresses are synthetic (prefix 52:54:00:ab:cd). -->
+<network>
+  <name>lab-mgmt</name>
+  <forward mode='nat'/>
+  <bridge name='labbr-mgmt' stp='on' delay='0'/>
+  <ip address='192.168.150.1' netmask='255.255.255.0'>
+    <dhcp>
+      <host mac='52:54:00:ab:cd:11' name='lab-edge' ip='192.168.150.11'/>
+      <host mac='52:54:00:ab:cd:12' name='lab-isp-router' ip='192.168.150.12'/>
+      <host mac='52:54:00:ab:cd:21' name='lab-lan-a' ip='192.168.150.21'/>
+      <host mac='52:54:00:ab:cd:22' name='lab-lan-b' ip='192.168.150.22'/>
+      <host mac='52:54:00:ab:cd:31' name='lab-dmz-web' ip='192.168.150.31'/>
+      <host mac='52:54:00:ab:cd:41' name='lab-isp-client' ip='192.168.150.41'/>
+    </dhcp>
+  </ip>
+</network>

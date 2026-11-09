@@ -1,0 +1,7 @@
+---
+# Key-only SSH, root login disabled, fail2ban. Aborts if no authorized key is present.
+- name: Harden SSH
+  hosts: all
+  become: true
+  roles:
+    - ssh_hardening

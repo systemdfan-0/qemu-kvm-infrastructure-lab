@@ -56,3 +56,6 @@ __pycache__/
 .vscode/
 .idea/
 .DS_Store
+
+# The reference build needs these otherwise-ignored types
+!infra/libvirt/networks/*.xml

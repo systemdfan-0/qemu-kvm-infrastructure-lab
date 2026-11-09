@@ -1,0 +1,13 @@
+# {{ ansible_managed }}
+[DEFAULT]
+backend = systemd
+banaction = nftables
+banaction_allports = nftables[type=allports]
+ignoreip = {{ f2b_ignoreip }}
+
+[sshd]
+enabled = true
+port = ssh
+maxretry = {{ f2b_maxretry }}
+findtime = {{ f2b_findtime }}
+bantime = {{ f2b_bantime }}

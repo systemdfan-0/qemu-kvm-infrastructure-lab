@@ -1,0 +1,49 @@
+---
+- name: Resolve interface names by role
+  ansible.builtin.set_fact:
+    fw_lan_if: "{{ (lab_interfaces | selectattr('role', 'equalto', 'lan') | first).name }}"
+    fw_dmz_if: "{{ (lab_interfaces | selectattr('role', 'equalto', 'dmz') | first).name }}"
+    fw_wan_if: "{{ (lab_interfaces | selectattr('role', 'equalto', 'wan') | first).name }}"
+
+- name: Create /etc/iptables
+  ansible.builtin.file:
+    path: /etc/iptables
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Install firewall rules (syntax-checked with iptables-restore --test)
+  ansible.builtin.template:
+    src: rules.v4.j2
+    dest: /etc/iptables/rules.v4
+    owner: root
+    group: root
+    mode: "0600"
+    validate: /usr/sbin/iptables-restore --test %s
+  notify: Reload lab firewall
+
+- name: Install lab-firewall.service
+  ansible.builtin.template:
+    src: lab-firewall.service.j2
+    dest: /etc/systemd/system/lab-firewall.service
+    owner: root
+    group: root
+    mode: "0644"
+  notify:
+    - Reload systemd
+    - Reload lab firewall
+
+- name: Enable the firewall unit
+  ansible.builtin.systemd_service:
+    name: lab-firewall.service
+    enabled: true
+    daemon_reload: true
+
+- name: Load the firewall now (before interfaces are re-applied)
+  ansible.builtin.meta: flush_handlers
+
+- name: Make sure the unit is active (the interface gate depends on it)
+  ansible.builtin.systemd_service:
+    name: lab-firewall.service
+    state: started

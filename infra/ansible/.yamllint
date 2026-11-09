@@ -1,0 +1,12 @@
+---
+extends: default
+rules:
+  line-length:
+    max: 160
+  document-start: disable
+  truthy:
+    check-keys: false
+  commas:
+    max-spaces-after: -1
+  braces:
+    max-spaces-inside: 1

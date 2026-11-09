@@ -1,0 +1,5 @@
+<!-- WAN transit segment between the edge router and the ISP router: L2 only -->
+<network>
+  <name>lab-wan</name>
+  <bridge name='labbr-wan' stp='on' delay='0'/>
+</network>

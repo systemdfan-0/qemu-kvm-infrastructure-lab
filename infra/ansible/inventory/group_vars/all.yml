@@ -1,0 +1,35 @@
+---
+admin_user: debian
+lab_forwarding: false
+lab_firewall_gate: false
+
+# Packages installed during bootstrap, while the temporary management route to the
+# package mirrors exists. Nothing is installed after the lab is locked down.
+lab_packages_common:
+  - ifupdown
+  - qemu-guest-agent
+  - openssh-server
+  - fail2ban
+  - python3-systemd
+lab_packages_routers:
+  - iptables
+
+# Temporary runtime-only default route used by bootstrap.yml (never written to disk).
+lab_mgmt_gateway: 192.168.150.1
+lab_mgmt_cidr: 192.168.150.0/24
+
+# SSH policy (see docs/en/ssh-hardening.md)
+ssh_allow_users: ["{{ admin_user }}"]
+ssh_allow_tcp_forwarding: "no"
+ssh_max_auth_tries: 3
+f2b_maxretry: 5
+f2b_findtime: 10m
+f2b_bantime: 1h
+
+# Router INPUT policy: "open" reproduces the documented lab (INPUT ACCEPT).
+# "strict" is the recommended hardening: default DROP on INPUT, SSH only from the
+# LAN and management networks, rate-limited. It changes matrix check 11 (see verify.yml).
+edge_input_mode: open
+
+# Optional HTTPS in front of the static site (self-signed, lab use only).
+web_tls_enabled: false

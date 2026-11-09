@@ -1,0 +1,3 @@
+---
+# Only the edge router runs lab-firewall.service, so only its interfaces carry the gate.
+lab_firewall_gate: true

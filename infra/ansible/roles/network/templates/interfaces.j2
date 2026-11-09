@@ -1,0 +1,22 @@
+# {{ ansible_managed }}
+# Static lab addressing (ifupdown). The management interface is not listed here.
+{% for i in lab_interfaces %}
+
+auto {{ i.name }}
+iface {{ i.name }} inet static
+    address {{ i.address }}/{{ i.prefix }}
+{% if i.gateway is defined %}
+    gateway {{ i.gateway }}
+{% endif %}
+{% if lab_firewall_gate | bool %}
+    # Firewall gate: refuse to bring the interface up before the firewall is loaded.
+    pre-up systemctl --quiet is-active lab-firewall.service
+{% endif %}
+{% for a in i.extra_addresses | default([]) %}
+    # `replace` is repeatable and does not hide real errors (no `|| true`).
+    up ip addr replace {{ a }} dev {{ i.name }}
+{% endfor %}
+{% for r in i.routes | default([]) %}
+    post-up ip route replace {{ r.to }} via {{ r.via }} dev {{ i.name }}
+{% endfor %}
+{% endfor %}

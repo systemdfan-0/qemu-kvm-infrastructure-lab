@@ -1,0 +1,52 @@
+---
+# Read-only SSH audit: reports the EFFECTIVE sshd configuration (sshd -T), so it also
+# catches settings that are overridden by another drop-in. Changes nothing.
+- name: Audit SSH configuration
+  hosts: all
+  become: true
+  gather_facts: false
+  tasks:
+    - name: Read effective sshd configuration
+      ansible.builtin.command: /usr/sbin/sshd -T
+      register: audit_sshd
+      changed_when: false
+
+    - name: Check the policy
+      ansible.builtin.assert:
+        that:
+          - "item.value in (audit_sshd.stdout_lines | map('lower') | list)"
+        success_msg: "PASS {{ item.value }}"
+        fail_msg: "FAIL expected '{{ item.value }}'"
+      loop: "{{ audit_policy | dict2items }}"
+      loop_control:
+        label: "{{ item.key }}"
+      vars:
+        audit_policy:
+          root_login: permitrootlogin no
+          password_auth: passwordauthentication no
+          kbd_interactive: kbdinteractiveauthentication no
+          pubkey_auth: pubkeyauthentication yes
+          empty_passwords: permitemptypasswords no
+          auth_methods: authenticationmethods publickey
+          x11: x11forwarding no
+          agent_forwarding: allowagentforwarding no
+
+    - name: Collect service states
+      ansible.builtin.service_facts:
+
+    - name: Check that sshd and fail2ban are running
+      ansible.builtin.assert:
+        that:
+          - ansible_facts.services['ssh.service'].state == 'running'
+          - ansible_facts.services['fail2ban.service'].state == 'running'
+        success_msg: PASS ssh.service and fail2ban.service are running
+        fail_msg: FAIL ssh.service or fail2ban.service is not running
+
+    - name: Show the sshd jail status
+      ansible.builtin.command: fail2ban-client status sshd
+      register: audit_jail
+      changed_when: false
+
+    - name: Report
+      ansible.builtin.debug:
+        msg: "{{ audit_jail.stdout_lines }}"

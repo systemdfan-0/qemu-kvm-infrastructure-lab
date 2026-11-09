@@ -8,10 +8,39 @@ import subprocess
 import sys
 
 ROOT = Path(__file__).resolve().parents[1]
-ALLOWED = {'.gitignore', 'README.md', 'README.ru.md',
-           'diagrams/network-topology.mmd', 'scripts/check_public.py'}
+ALLOWED = {'.gitignore', 'LICENSE', 'README.md', 'README.ru.md',
+           'diagrams/network-topology.mmd', 'scripts/check_public.py',
+           'scripts/ssh_check.py', '.github/workflows/ci.yml',
+           'infra/README.md', 'infra/examples/edge-router.nft',
+           'infra/libvirt/lab.sh'}
 ALLOWED.update(f'docs/{lang}/{name}.md' for lang in ('en', 'ru')
-               for name in ('architecture', 'validation', 'security', 'portfolio-case'))
+               for name in ('architecture', 'validation', 'security', 'portfolio-case',
+                            'infrastructure-as-code', 'ssh-hardening'))
+ALLOWED.update(f'infra/libvirt/networks/lab-{name}.xml'
+               for name in ('lan', 'dmz', 'wan', 'isp', 'mgmt'))
+ALLOWED.update(f'infra/ansible/{name}' for name in (
+    'ansible.cfg', '.ansible-lint', '.yamllint',
+    'inventory/hosts.yml', 'inventory/group_vars/all.yml',
+    'inventory/group_vars/routers.yml', 'inventory/group_vars/edge.yml',
+    'inventory/group_vars/web.yml', 'vars/matrix.yml',
+    'playbooks/site.yml', 'playbooks/bootstrap.yml', 'playbooks/ssh_hardening.yml',
+    'playbooks/verify.yml', 'playbooks/audit_ssh.yml',
+    'roles/packages/tasks/main.yml',
+    'roles/base/tasks/main.yml', 'roles/base/handlers/main.yml',
+    'roles/network/tasks/main.yml', 'roles/network/handlers/main.yml',
+    'roles/network/templates/interfaces.j2',
+    'roles/edge_firewall/tasks/main.yml', 'roles/edge_firewall/handlers/main.yml',
+    'roles/edge_firewall/templates/rules.v4.j2',
+    'roles/edge_firewall/templates/lab-firewall.service.j2',
+    'roles/web/defaults/main.yml', 'roles/web/tasks/main.yml',
+    'roles/web/handlers/main.yml', 'roles/web/templates/index.html.j2',
+    'roles/web/templates/lab-web.service.j2',
+    'roles/web_tls/defaults/main.yml', 'roles/web_tls/tasks/main.yml',
+    'roles/web_tls/handlers/main.yml', 'roles/web_tls/templates/lab-web.conf.j2',
+    'roles/ssh_hardening/defaults/main.yml', 'roles/ssh_hardening/tasks/main.yml',
+    'roles/ssh_hardening/handlers/main.yml',
+    'roles/ssh_hardening/templates/00-lab-hardening.conf.j2',
+    'roles/ssh_hardening/templates/jail-lab-sshd.local.j2'))
 LOCAL_ONLY = {'.git', '.agents', '.aws', '.codex', '__pycache__'}
 PATTERNS = {
     'UUID': r'\b[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}\b',
@@ -22,12 +51,18 @@ PATTERNS = {
     'GitHub credential': r'\b(?:gh[pousr]_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,})\b',
     'cloud access identifier': r'\b(?:AKIA|ASIA)[A-Z0-9]{16}\b',
     'credential URL': r'https?://[^\s/@]+:[^\s/@]+@',
-    'IPv6 address': r'(?<!\w)(?:[0-9a-f]{1,4}:){2,}[0-9a-f:]+',
+    'IPv6 address': (r'(?<![\w:])(?:(?:[0-9a-f]{1,4}:){7}[0-9a-f]{1,4}'
+                     r'|(?:[0-9a-f]{1,4}:){1,6}:(?:[0-9a-f]{1,4})?'
+                     r'|::(?:[0-9a-f]{1,4}:){0,5}[0-9a-f]{1,4})(?![\w:])'),
 }
+# Not host addresses: the wildcard bind address and the netmask of the management network.
+NON_ADDRESSES = {'0.0.0.0', '255.255.255.0'}
 IPV4 = re.compile(r'\b(?:\d{1,3}\.){3}\d{1,3}\b')
 LAB_RANGES = tuple(ipaddress.ip_network(value) for value in (
     '192.168.10.0/24', '192.168.20.0/24', '10.10.10.0/24',
-    '198.51.100.0/24', '127.0.0.0/8'))
+    '192.168.150.0/24', '198.51.100.0/24', '127.0.0.0/8'))
+# Synthetic management-network MACs used by the reference build (documented, not real).
+SYNTHETIC_MAC = re.compile(r'\b52:54:00:ab:cd:[0-9a-f]{2}\b', re.I)
 
 
 def git(*args):
@@ -94,10 +129,11 @@ def main():
             except UnicodeError:
                 fail(name, 'non-UTF-8 file')
                 continue
+            content = SYNTHETIC_MAC.sub('SYNTHETIC-MAC', content)
             for category, pattern in PATTERNS.items():
                 if re.search(pattern, content, re.I):
                     fail(name, category)
-            for value in set(IPV4.findall(content)):
+            for value in set(IPV4.findall(content)) - NON_ADDRESSES:
                 try:
                     address = ipaddress.ip_address(value)
                 except ValueError:

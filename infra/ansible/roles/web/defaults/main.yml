@@ -1,0 +1,4 @@
+---
+web_root: /srv/www/html
+web_port: 80
+web_bind: 0.0.0.0

@@ -1,0 +1,30 @@
+---
+- name: Check that every configured interface exists
+  ansible.builtin.assert:
+    that: item.name in ansible_facts.interfaces
+    fail_msg: >-
+      Interface {{ item.name }} does not exist on {{ inventory_hostname }}
+      (found: {{ ansible_facts.interfaces | join(', ') }}). Adjust lab_interfaces in the inventory.
+    quiet: true
+  loop: "{{ lab_interfaces }}"
+
+- name: Make sure ifupdown reads /etc/network/interfaces.d
+  ansible.builtin.lineinfile:
+    path: /etc/network/interfaces
+    line: source /etc/network/interfaces.d/*
+    create: true
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Write static lab interfaces
+  ansible.builtin.template:
+    src: interfaces.j2
+    dest: /etc/network/interfaces.d/90-lab
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Apply lab interfaces
+
+- name: Apply interface changes
+  ansible.builtin.meta: flush_handlers

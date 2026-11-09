@@ -1,0 +1,3 @@
+---
+web_root: /srv/www/html
+web_port: 80

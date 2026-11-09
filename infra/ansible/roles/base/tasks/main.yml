@@ -1,0 +1,23 @@
+---
+- name: Set hostname
+  ansible.builtin.hostname:
+    name: "{{ inventory_hostname }}"
+
+- name: Configure IPv4 forwarding policy (enabled on routers only)
+  ansible.builtin.copy:
+    dest: /etc/sysctl.d/90-lab-forwarding.conf
+    content: |
+      # Managed by Ansible
+      net.ipv4.ip_forward = {{ 1 if (lab_forwarding | bool) else 0 }}
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Apply sysctl
+
+- name: Ensure the QEMU guest agent is running
+  ansible.builtin.service:
+    name: qemu-guest-agent
+    state: started
+
+- name: Apply sysctl now
+  ansible.builtin.meta: flush_handlers
